@@ -1,6 +1,7 @@
 const db = require("../models");
 const Users = db.users;
 const Roles = db.roles;
+const Dep = db.departments;
 const bcrypt = require("bcrypt");
 const { sign } = require("jsonwebtoken");
 const multer = require('multer')
@@ -101,15 +102,9 @@ const Complement = (req, res) => {
                 console.error(err);
                 return res.status(400).send({ error: err.message });
             }
-            const CurrentUser = req.user.email;
-            const id = req.params.id;
-            const user = await Users.findOne({
-                where: { id: id }
-            })
             const { first_name, last_name, phone_number } = req.body;
             const image = req.files['image'][0].path; // Путь к изображению
             const cv_file = req.files['cv_file'][0].path; // Путь к файлу резюме
-
             const info = {
                 first_name,
                 last_name,
@@ -117,13 +112,8 @@ const Complement = (req, res) => {
                 cv_file,
                 phone_number
             };
-            if(user && user.email == CurrentUser){
-                const updatedUser = await Users.update(info, { where: { id: id } });
-                res.send(updatedUser);
-            }
-            else{
-                res.send("user not found or u dont have access to change any dates of user")
-            }
+            const updatedUser = await Users.update(info, { where: { id: req.user.id } });
+            res.send(updatedUser);
         } catch (err) {
             console.error(err);
             res.status(500).send({ error: "Ошибка при обновлении пользователя" });
@@ -137,7 +127,12 @@ const showAll = async (req, res) => {
             include: [{
                 model: Roles,
                 as: 'role'
-            }]
+            },
+            {
+                model: Dep,
+                as: "department"
+            }
+        ]
         });
         res.send(users);
     } catch (error) {
@@ -153,7 +148,12 @@ const getById = async (req, res)=>{
             include: [{
                 model: Roles,
                 as: 'role'
-            }]
+            },
+                {
+                    model: Dep,
+                    as: "department"
+                }
+            ]
         })
         res.send(user)
     }catch(err){
@@ -168,7 +168,7 @@ const getRole = async (req, res, next) => {
                 {
                     model: Roles,
                     as: 'role'
-                }
+                },
             ]
         });
 
@@ -190,20 +190,50 @@ const Role = async (req, res) => {
         const role = {
             roleId: req.body.roleId
         };
-        if(currentUser.role.value == "admin"){
-            const newuser = await Users.update(role, { where: { id: id } })
-            res.send(newuser)
+        if(currentUser.roleId == 1){
+            const newuser = await Users.update(role, { where: { id: id } });
+            return res.send(newuser);
         }
-        res.send("u dont have access to change role any user's role")
+        return res.send("You don't have access to change any user's role");
     } catch (error) {
         console.error(error);
+        res.status(500).send("Internal Server Error");
     }
 };
-const CurrentUser = async (req, res)=>{
-    const user = req.user
-    res.send(user)
 
+const Department = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const currentUser = req.user;
+        const dep = {
+            departmentId: req.body.departmentId
+        };
+        if(currentUser.roleId == 1){
+            const newuser = await Users.update(dep, { where: { id: id } });
+            return res.send(newuser);
+        }
+        return res.send("You don't have access to change any user's role");
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+    }
+};
+
+const CurrentUser = async (req, res)=>{
+    const userId = req.user.id
+    const user = await Users.findByPk(userId,{
+        include:[{
+            model: Roles,
+            as: "role"
+        },
+        {
+            model: Dep,
+            as: "department"
+        }
+        ]})
+    res.status(200).send(user)
 }
+
 const Delete = async (req, res)=>{
     const id = req.params.id;
     const user = req.user;
@@ -219,6 +249,15 @@ const Delete = async (req, res)=>{
     }
 }
 
+const getJustUsers = async (req, res)=>{
+    try{
+        const users = await Users.findAll({where:{roleId: 2}})
+        res.send(users)
+    }catch (err) {
+        console.log(err)
+    }
+}
+
 module.exports={
     Auth,
     Login,
@@ -228,5 +267,7 @@ module.exports={
     CurrentUser,
     getRole,
     getById,
-    Delete
+    Delete,
+    getJustUsers,
+    Department
 };

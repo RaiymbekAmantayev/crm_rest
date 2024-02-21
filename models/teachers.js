@@ -12,19 +12,23 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        departmentId: {
+        student_survey: {
             type: DataTypes.INTEGER,
-            allowNull: true,
-            references: {
-                model: "departments",
-                key: "id",
-            }
+            allowNull: false,
         },
         achivmentsId: {
             type: DataTypes.INTEGER,
             allowNull: true,
             references: {
                 model: "achievments",
+                key: "id",
+            }
+        },
+        gradeId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: "grades",
                 key: "id",
             }
         },

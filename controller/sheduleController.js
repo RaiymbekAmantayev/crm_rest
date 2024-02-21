@@ -4,6 +4,7 @@ const Dean = db.deans;
 const Lesson = db.lessons;
 const Teacher = db.teachers;
 const CRN = db.crn
+const User = db.users
 
 const addShedule = async (req, res)=>{
     const {lessonId, week_days, start_time, end_time, auditory, CRNId, TeacherId}= req.body;
@@ -35,7 +36,7 @@ const addShedule = async (req, res)=>{
         });
         const lesson = await Lesson.findByPk(lessonId)
         const teacher = await Teacher.findByPk(TeacherId)
-
+        const TeacherDepartment = await User.findByPk(teacher.userId)
         let info = {
             lessonId,
             week_days,
@@ -46,7 +47,7 @@ const addShedule = async (req, res)=>{
             TeacherId
         }
 
-        if (isFromDean && isFromDean.departmentId == lesson.departmentId && lesson.departmentId == teacher.departmentId && !sheduleTeacher && !sheduleAuditory && !sheduleCrn) {
+        if (isFromDean && req.user.departmentId == lesson.departmentId && lesson.departmentId == TeacherDepartment.departmentId && !sheduleTeacher && !sheduleAuditory && !sheduleCrn) {
             const newShedule = await Shedule.create(info)
             res.send(newShedule)
         }

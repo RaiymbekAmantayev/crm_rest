@@ -17,10 +17,14 @@ const addDep = async (req, res) => {
 };
 
 const showDep = async (req, res)=> {
-    const roles = await Dep.findAll()
-    res.send(roles)
+    const dep = await Dep.findAll()
+    res.send(dep)
 }
 
+// const ShowDep = async (req, res)=>{
+//     const user = req.user
+//     const dep = await Dep.findOne({ })
+// }
 
 module.exports = {
     addDep,

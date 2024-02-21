@@ -1,12 +1,15 @@
 const db = require("../models");
 const Lesson = db.lessons; // Убедитесь, что имя модели совпадает с именем в вашей базе данных
 const Dep = db.departments
+const Category = db.category
 const addLesson = async (req, res) => {
+    const currentUser = req.user
     let info = {
         title: req.body.title,
         credit_count: req.body.credit_count,
         description: req.body.description,
-        departmentId: req.body.departmentId
+        departmentId: currentUser.departmentId,
+        categoryId:  req.body.categoryId
     };
     try {
         const lesson = await Lesson.create(info);
@@ -20,11 +23,17 @@ const addLesson = async (req, res) => {
 
 const showAll = async (req, res)=>{
     try{
+        const currentUser = req.user
         const lessons = await Lesson.findAll({
+            where:{departmentId: currentUser.departmentId},
             include:[
                 {
                     model: Dep,
                     as: 'department'
+                },
+                {
+                    model: Category,
+                    as: 'categories'
                 }
             ]
         })

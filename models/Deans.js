@@ -8,11 +8,11 @@ module.exports = (sequelize, DataTypes) => {
                 key: "id",
             }
         },
-        roleId: {
+        deanRoleId: {
             type: DataTypes.INTEGER,
                 allowNull: true,
                 references: {
-                model: "roles",
+                model: "deanRoles",
                     key: "id",
             }
         },
@@ -23,15 +23,7 @@ module.exports = (sequelize, DataTypes) => {
         duties: {
             type: DataTypes.TEXT,
             allowNull: true,
-        },
-        departmentId: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            references: {
-                model: "departments",
-                key: "id",
-            }
-        },
+        }
     });
     return Deans;
 };

@@ -1,0 +1,10 @@
+node_modules/
+Articles/
+Projects/
+Sertificates/
+Images/
+index.html
+*.png
+*.jpg
+*.jpeg
+*.webp

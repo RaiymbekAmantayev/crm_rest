@@ -1,34 +1,33 @@
 module.exports = (sequelize, DataTypes) => {
-    const Lessons = sequelize.define("lessons", {
+    const Projects = sequelize.define("projects", {
         title: {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        credit_count: {
-            type: DataTypes.INTEGER,
+        file:{
+            type: DataTypes.TEXT,
             allowNull: false,
         },
-        description: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
-        departmentId: {
+        userId:{
             type: DataTypes.INTEGER,
-            allowNull: true,
+            allowNull: false,
             references: {
-                model: "departments",
+                model: "users",
                 key: "id",
             }
         },
-        categoryId: {
+        categoryId:{
             type: DataTypes.INTEGER,
-            allowNull: true,
+            allowNull: false,
             references: {
-                model: "categories",
+                model: "project_categories",
                 key: "id",
             }
+        },
+        points:{
+            type: DataTypes.INTEGER,
+            allowNull: false,
         },
     });
-
-    return Lessons;
+    return Projects;
 };

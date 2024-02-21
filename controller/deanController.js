@@ -4,8 +4,9 @@ const Dep = db.departments
 const Users = db.users
 const Roles = db.roles
 
+
 const addDean = async (req, res)=>{
-    const { userId, salary, duties, departmentId } = req.body;
+    const { userId, salary, duties, deanRoleId } = req.body;
     const user = await Users.findByPk(req.body.userId, {
         include: [
             {
@@ -20,15 +21,13 @@ const addDean = async (req, res)=>{
             res.send('first of change role of user or user not found')
         }
         if(dean){
-            res.send("u cant add exists user")
+            res.send("u can't add exists user")
         }
-        const roleId = user.roleId
         let info = {
             userId,
-            roleId,
+            deanRoleId,
             salary,
             duties,
-            departmentId
         };
         const deanEmployeer = await Dean.create(info);
         res.status(200).send(deanEmployeer)

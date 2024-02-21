@@ -36,6 +36,14 @@ module.exports = (sequelize, DataTypes) => {
                 key: "id",
             }
         },
+        departmentId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: "departments",
+                key: "id",
+            }
+        },
     });
     return Users;
 };

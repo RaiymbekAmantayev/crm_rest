@@ -2,29 +2,27 @@ const db = require("../models");
 const Teachers = db.teachers
 const Dep = db.departments
 const Users = db.users
-const Roles = db.roles
+const Position = db.position
+const Grade = db.grades
 const Achievment = db.achivments
 
 
 const addTeacher = async (req, res)=>{
-    const { userId, salary,  departmentId, achivmentsId } = req.body;
-    const teacherAchiv = await Teachers.findOne({where:{id:achivmentsId}})
-    const user = await Users.findByPk(req.body.userId, {
-        include: [
-            {
-                model: Roles,
-                as: 'role'
-            }
-        ]
-    })
+
+    const gradeId= null
+    const achivmentsId = null
+    const { userId, salary, student_survey } = req.body;
+    const currentUser = req.user;
+    const user = await Users.findByPk(req.body.userId)
     const teacher = await Teachers.findOne({where:{userId:userId}})
     try{
-        if(!teacherAchiv && !teacher && user && user.roleId == 4 ){
+        if(!teacher && user && user.roleId == 4 && currentUser.roleId == 1 && currentUser.departmentId == user.departmentId){
             let info = {
                 userId,
                 salary,
-                departmentId,
                 achivmentsId,
+                student_survey,
+                gradeId
             };
             const teachers = await Teachers.create(info);
             res.status(200).send(teachers)
@@ -35,55 +33,110 @@ const addTeacher = async (req, res)=>{
     }
 }
 
-const showAll = async (req, res)=>{
-    try{
-        const teacher = await Teachers.findAll({
+
+const showAll = async (req, res) => {
+    const currentUser = req.user.departmentId;
+    try {
+        const teachers = await Teachers.findAll({
             include: [
                 {
                     model: Users,
-                    as: 'user'
+                    as: 'user',
+                    where: {
+                        departmentId: currentUser
+                    },
                 },
                 {
-                    model: Dep,
-                    as: 'department'
-                },
-                {
-                    model: Achievment,
-                    as: 'achivments'
+                    model: Grade,
+                    as: 'grades'
                 }
-            ]
-        })
-        res.send(teacher)
-    }catch (err){
-        res.send(err)
-    }
 
-}
+            ]
+        });
+
+        res.send(teachers);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Internal Server Error");
+    }
+};
+
+const getPositionById = async (positionId) => {
+    try {
+        const position = await Position.findByPk(positionId);
+        return position;
+    } catch (error) {
+        console.error('Error fetching position:', error);
+        return null;
+    }
+};
 
 const getById = async (req, res)=>{
     const id = req.params.id
     try{
-        const teacher = await Teachers.findByPk(id,{
+        const user = await Users.findByPk(id)
+        const userId = user.id
+        const teacher = await Teachers.findOne({where:{userId:userId},
             include: [
                 {
                     model: Users,
                     as: 'user'
                 },
                 {
-                    model: Dep,
-                    as: 'department'
+                    model: Achievment,
+                    as: 'achievments'
                 },
                 {
-                    model: Achievment,
-                    as: 'achivments'
+                    model: Grade,
+                    as: 'grades',
+
                 }
             ]
-        })
-        res.send(teacher)
+        });
+        if (!teacher) {
+            return res.status(404).send('User not found');
+        }
+        const positionId = teacher.grades.positionId;
+        const position = await getPositionById(positionId)
+        res.json({teacher, position})
     }catch (err){
         console.log(err)
     }
 }
+const getByCurrentUser = async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const teacher = await Teachers.findOne({
+            where: { userId: userId },
+            include: [
+                {
+                    model: Users,
+                    as: 'user'
+                },
+                {
+                    model: Achievment,
+                    as: 'achievments'
+                },
+                {
+                    model: Grade,
+                    as: 'grades'
+                }
+            ]
+        });
+
+        if (!teacher) {
+            return res.status(404).send('User not found');
+        }
+
+        const positionId = teacher.grades.positionId;
+        const position = await getPositionById(positionId);
+        res.json({ teacher, position });
+    } catch (err) {
+        console.log(err);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
 const getByUser = async (req, res) => {
     const id = req.params.id;
     try {
@@ -96,12 +149,12 @@ const getByUser = async (req, res) => {
                     as: 'user'
                 },
                 {
-                    model: Dep,
-                    as: 'department'
-                },
-                {
                     model: Achievment,
                     as: 'achivments'
+                },
+                {
+                    model: Grade,
+                    as: 'grades'
                 }
             ]
         });
@@ -120,7 +173,6 @@ const UpdateTeacherByUser = async (req, res)=>{
     try{
         let info = {
             salary,
-            departmentId,
         };
         const teachers = await Teachers.update(info,{
             where:{id:teacher.id}
@@ -137,7 +189,6 @@ const UpdateTeacherById = async (req, res)=>{
     try{
         let info = {
             salary,
-            departmentId
         };
         const teachers = await Teachers.update(info,{
             where:{id:id}
@@ -174,6 +225,7 @@ module.exports={
     showAll,
     getById,
     getByUser,
+    getByCurrentUser,
     UpdateTeacherByUser,
     UpdateTeacherById,
     DeleteById,
