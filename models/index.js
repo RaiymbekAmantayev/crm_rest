@@ -50,7 +50,6 @@ db.sertificates = require("../models/Sertificates")(sequelize,DataTypes)
 db.project_category = require("../models/CategoryProjects")(sequelize, DataTypes)
 db.projects = require("../models/projects")(sequelize,DataTypes)
 
-
 db.sequelize.sync({ force: false })
     .then(() => {
         console.log('yes re-sync done!')
@@ -58,8 +57,7 @@ db.sequelize.sync({ force: false })
 
 // Установка ассоциаций
 
-
-                        //projects association
+//projects association
 db.project_category.hasMany(db.projects, { foreignKey: 'categoryId', as: 'projects' });
 db.projects.belongsTo(db.project_category, { foreignKey: 'categoryId', as: 'project_categories' });
 

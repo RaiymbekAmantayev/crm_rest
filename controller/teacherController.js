@@ -125,6 +125,7 @@ const getByCurrentUser = async (req, res) => {
         });
 
         if (!teacher) {
+            console.log("user not found")
             return res.status(404).send('User not found');
         }
 

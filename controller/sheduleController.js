@@ -58,18 +58,22 @@ const addShedule = async (req, res)=>{
         console.log(err)
     }
 }
-const getAll = async (req, res)=>{
-    const userId = req.user.id
+const getAll = async (req, res) => {
+    const userId = req.user.id;
+    const userDepartmentId = req.user.departmentId;
     const isFromDean = await Dean.findOne({
-        where: {userId: userId}
+        where: { userId: userId }
     });
-    try{
-        if(isFromDean){
-            const shedules = await Shedule.findAll(({
+    try {
+        if (isFromDean) {
+            const schedules = await Shedule.findAll({
                 include: [
                     {
                         model: Lesson,
-                        as: 'lessons'
+                        as: 'lessons',
+                        where: {
+                            departmentId: userDepartmentId
+                        },
                     },
                     {
                         model: CRN,
@@ -77,14 +81,19 @@ const getAll = async (req, res)=>{
                     },
                     {
                         model: Teacher,
-                        as: 'teachers'
+                        as: 'teachers',
+                        include: [
+                            {
+                                model: User,
+                                as: 'user'
+                            }
+                        ]
                     }
                 ]
-            }))
-            res.status(200).send(shedules)
-        }
-        else{
-            res.send("u dont have acess")
+            });
+            res.status(200).send(schedules);
+        } else {
+           return res.send("You don't have access");
         }
     }catch(err){
         console.log(err)
@@ -129,6 +138,9 @@ const getForTeacher = async (req, res)=>{
         where: {userId: userId}
     });
     try {
+        if(!isFromTeacher){
+            return res.status(404).send("user not found")
+        }
         const MyShedules = await Shedule.findAll({where:{TeacherId:isFromTeacher.id},
             include: [
                 {
@@ -139,10 +151,6 @@ const getForTeacher = async (req, res)=>{
                     model: CRN,
                     as: 'crns'
                 },
-                {
-                    model: Teacher,
-                    as: 'teachers'
-                }
             ]})
         res.status(200).send(MyShedules)
     }catch (err){
@@ -169,10 +177,6 @@ const getIdForTeacher = async (req,res)=>{
                         model: CRN,
                         as: 'crns'
                     },
-                    {
-                        model: Teacher,
-                        as: 'teachers'
-                    }
                 ]
             }))
             res.status(200).send(shedules)
@@ -247,3 +251,13 @@ module.exports={
     getById,
     getIdForTeacher
 }
+
+
+
+// const formattedSchedules = schedules.map(schedule => {
+//     return {
+//         lesson: schedule.lessons,
+//         crn: schedule.crns,
+//         teacher: schedule.teachers
+//     };
+// });

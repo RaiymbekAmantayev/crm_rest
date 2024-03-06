@@ -2,6 +2,8 @@ const db = require("../models");
 const multer = require("multer");
 const Project = db.projects
 const Category = db.project_category
+const Achievment = db.achivments
+
 const AddProjects = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -17,7 +19,10 @@ const AddProjects = async (req, res) => {
             points
         };
 
-        const newProject = await Project.create(info);
+        const newProject = await Project.create(info);      const achievment = await Achievment.findOne({where:{userId: userId}})
+        if(achievment){
+            await Achievment.update({status:"edited"}, {where:{userId:userId}})
+        }
         return res.status(200).json(newProject);
     } catch (err) {
         console.error("Error adding projects:", err);
@@ -29,8 +34,12 @@ const AddProjects = async (req, res) => {
 
 const getAllByUser = async (req, res)=>{
     try{
-        const userId =req.query.userId
-        const projects = await Project.findAll({where:{userId:userId}})
+        const userId = req.query.userId
+        const projects = await Project.findAll({where:{userId:userId},
+        include:{
+            model: Category,
+            as: 'project_categories'
+        }})
         res.send(projects)
     }catch (e){
         console.log(e)
@@ -54,8 +63,45 @@ const upload = multer({
     limits: { fileSize: 1000000 },
 }).single("file");
 
+
+const changeStatus = async (req, res)=>{
+    try{
+        const projectId = req.query.projectId
+        const project = await Project.findByPk(projectId)
+        const userId = project.userId
+        const status = 0
+        const comment = req.body.comment
+        if(req.user.roleId === 1){
+            const newStatus = Project.update({status:status, comment:comment},{where:{id:projectId}})
+            await Achievment.update({status:"edited"}, {where:{userId:userId}})
+            return res.status(200).send(newStatus)
+        }
+        return res.status(401).send("u dont have access")
+    }catch (e){
+        return res.status(500).send("error", e)
+    }
+}
+
+
+const DeleteById = async (req, res)=>{
+    try{
+        const userId = req.user.id
+        const id = req.params.id
+        await Project.destroy({where:{id:id}})
+        const achievment = await Achievment.findOne({where:{userId: userId}})
+        if(achievment){
+            await Achievment.update({status:"edited"}, {where:{userId:userId}})
+        }
+        return res.send("success")
+    }catch (e){
+        return res.status(500).send("error")
+    }
+}
+
 module.exports={
     AddProjects,
     getAllByUser,
-    upload
+    upload,
+    DeleteById,
+    changeStatus
 }

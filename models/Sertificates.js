@@ -28,6 +28,16 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        status: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            defaultValue: 1 // установка значения по умолчанию
+        },
+        comment:{
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: null
+        }
     });
     return Sertificates;
 };
