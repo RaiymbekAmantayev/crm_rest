@@ -19,7 +19,8 @@ const AddProjects = async (req, res) => {
             points
         };
 
-        const newProject = await Project.create(info);      const achievment = await Achievment.findOne({where:{userId: userId}})
+        const newProject = await Project.create(info);
+        const achievment = await Achievment.findOne({where:{userId: userId}})
         if(achievment){
             await Achievment.update({status:"edited"}, {where:{userId:userId}})
         }
@@ -72,7 +73,7 @@ const changeStatus = async (req, res)=>{
         const status = 0
         const comment = req.body.comment
         if(req.user.roleId === 1){
-            const newStatus = Project.update({status:status, comment:comment},{where:{id:projectId}})
+            const newStatus = Project.update({status:status, comment:comment, points:0},{where:{id:projectId}})
             await Achievment.update({status:"edited"}, {where:{userId:userId}})
             return res.status(200).send(newStatus)
         }

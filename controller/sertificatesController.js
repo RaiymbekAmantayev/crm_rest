@@ -81,7 +81,7 @@ const changeStatus = async (req, res)=>{
         const status = 0
         const comment = req.body.comment
         if(req.user.roleId === 1){
-            const newStatus = Sertificates.update({status:status, comment:comment},{where:{id:sertificId}})
+            const newStatus = Sertificates.update({status:status, comment:comment, points:0},{where:{id:sertificId}})
             await Achievement.update({status:"edited"}, {where:{userId:userId}})
             return res.status(200).send(newStatus)
         }

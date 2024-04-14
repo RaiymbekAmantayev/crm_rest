@@ -20,7 +20,31 @@ const addLesson = async (req, res) => {
         res.status(500).send("Ошибка при создании дисциплины");
     }
 };
+const lessonAll = async (req, res)=>{
+    try{
+        const currentUser = req.user
+        if(currentUser.roleId == 6){
 
+            const lessons = await Lesson.findAll({
+                include:[
+                    {
+                        model: Dep,
+                        as: 'department'
+                    },
+                    {
+                        model: Category,
+                        as: 'categories'
+                    }
+                ]
+            })
+           return res.status(200).send(lessons)
+        }
+        return res.send({})
+
+    }catch(err){
+        res.send(err)
+    }
+}
 const showAll = async (req, res)=>{
     try{
         const currentUser = req.user
@@ -41,7 +65,6 @@ const showAll = async (req, res)=>{
     }catch(err){
         res.send(err)
     }
-
 }
 const getById = async (req, res)=>{
     const id = req.params.id;
@@ -93,5 +116,6 @@ module.exports = {
     showAll,
     getById,
     UpdateLesson,
-    Delete
+    Delete,
+    lessonAll
 };

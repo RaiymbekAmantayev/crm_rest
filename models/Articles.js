@@ -41,7 +41,12 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: true,
             defaultValue: null
-        }
+        },
+        parsed: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            defaultValue: 0 // установка значения по умолчанию
+        },
     });
     return Articles;
 };

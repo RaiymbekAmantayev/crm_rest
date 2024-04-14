@@ -5,31 +5,44 @@ const multer = require("multer");
 const Public = db.publications
 const {path} = require("path");
 
+function checkLinkMatch(baseLink, testLink) {
+    if (typeof baseLink === 'string' && typeof testLink === 'string') {
+        return testLink.startsWith(baseLink);
+    } else {
+        return false;
+    }
+}
 const AddArticles = async (req, res) => {
     try {
         const { publicationId } = req.body;
         const userId = req.user.id;
         let file = null;
-        let link = null;
-
-        if (req.file && req.file.path) {
-            file = req.file.path;
-        }
-        if(req.body.link){
-            link = req.body.link
-        }
+        let link = req.body.link
 
         const public = await Public.findByPk(publicationId);
         const points = public.points;
+        const checkUnique = await Articles.findOne({where:{link:link, userId:userId}})
+        if(checkUnique){
+            return res.send("this link exists already")
+        }
+        let status = 1
+        let comment= ""
+        if(!checkLinkMatch(public.base_url, link)){
+            status -= 1
+            comment += "fake link"
+        }
+        console.log(public.base_url)
+        console.log(link)
         const { title } = req.body;
-
         const info = {
             title,
             file,
             link,
             userId,
             publicationId,
-            points
+            points,
+            status,
+            comment
         };
 
         const newArticle = await Articles.create(info);
@@ -37,7 +50,7 @@ const AddArticles = async (req, res) => {
         if(achievment){
             await Achievment.update({status:"edited"}, {where:{userId:userId}})
         }
-        return res.status(200).json(newArticle);
+        return res.status(200).send("ur dates added successfully");
     } catch (err) {
         console.error("Error adding articles:", err);
         res.status(500).send("Internal server error.");
@@ -83,7 +96,7 @@ const changeStatus = async (req, res)=>{
         const status = 0
         const comment = req.body.comment
         if(req.user.roleId === 1){
-            const newStatus = Articles.update({status:status, comment:comment},{where:{id:articleId}})
+            const newStatus = Articles.update({status:status, comment:comment, points:0},{where:{id:articleId}})
             await Achievment.update({status:"edited"}, {where:{userId:userId}})
             return res.status(200).send(newStatus)
         }

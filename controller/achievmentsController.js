@@ -40,13 +40,13 @@ const addAchievment = async (req, res) => {
         possible_grade: null,
         userId
     }
-    const isExists = await Achievments.findOne({userId: userId})
+    const isExists = await Achievments.findOne({where:{userId: req.user.id}})
+    console.log(req.user.id)
     if(isExists){
-        return res.send("user already has achievments, user can update achievment")
+        return res.send(isExists)
     }
     if(user.roleId == 4 && !isExists){
         const achievment = await Achievments.create(info);
-
         return res.send(achievment)
     }else{
         return res.send("wrong query")
@@ -134,7 +134,7 @@ const colculatingAchievment = async ()=>{
                 break;
             }
         }
-        await Teacher.update({ gradeId: possibleGradeId, achivmentsId: achievment.id}, { where: { id: Teacher.id }});
+        await Teacher.update({ achivmentsId: achievment.id}, { where: { id: Teacher.id }});
         await Achievments.update({count_of_projects:count_of_projects,
             count_of_monography:count_of_monography,
             count_of_seminar:count_of_seminar,
@@ -154,6 +154,36 @@ const startColculating = () => {
 
 startColculating();
 
+
+const getAllAchievement = async (req, res)=>{
+    try{
+        const user = req.user
+        console.log(user)
+        if(user.roleId) {
+            const achievments = await Achievments.findAll({
+                include: [
+                    {
+                        model: Users,
+                        as: 'user',
+                    },
+                    {
+                        model: Grade,
+                        as: 'possible_grades',
+                        include: {
+                            model: Position,
+                            as: 'position'
+                        }
+                    }
+                ]
+            })
+            console.log(achievments)
+            return res.send(achievments)
+        }
+        return res.send({})
+    }catch (e){
+        console.error(e)
+    }
+}
 
 const getAll = async (req, res)=>{
     try{
@@ -197,6 +227,21 @@ const getAchievmentByUser = async (req, res) => {
     try {
         const achievement = await Achievments.findOne({
             where: { userId: teacherId },
+            include  : [{
+                model: Users,
+                as: "user"
+            },
+                {
+                    model:Grade,
+                    as: 'possible_grades',
+                    include:{
+                        model: Position,
+                        as: 'position'
+                    }
+                }
+            ]
+
+
         });
         console.log("Retrieved achievement:", achievement);
 
@@ -212,6 +257,45 @@ const getAchievmentByUser = async (req, res) => {
 };
 
 
+const UpdateTeacherGrade = async (req, res) => {
+    try {
+        const id = req.query.id;
+
+        // Проверяем, что пользователь существует
+        const user = await Users.findByPk(id);
+        if (!user) {
+            return res.status(404).send("User not found");
+        }
+
+        // Получаем информацию об учителе
+        const teacher = await Teachers.findOne({ where: { userId: user.id } });
+        if (!teacher) {
+            return res.status(404).send("Teacher not found");
+        }
+
+        console.log(teacher);
+
+        // Получаем достижения учителя
+        const achievement = await Achievments.findByPk(teacher.achivmentsId);
+        if (!achievement) {
+            return res.status(404).send("Achievement not found for this teacher");
+        }
+
+        console.log("pos grade: ",achievement.possible_grade);
+
+        // Обновляем оценку учителя
+        const result = await Teachers.update({ gradeId: achievement.possible_grade }, { where: { userId: id } });
+        if (result[0] > 0) {
+            return res.send("success");
+        }
+
+        // Если ни одна строка не была обновлена
+        return res.send("No rows were updated");
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+    }
+}
 
 
 
@@ -221,5 +305,7 @@ const getAchievmentByUser = async (req, res) => {
 module.exports = {
     addAchievment,
     getAll,
-    getAchievmentByUser
+    getAllAchievement,
+    getAchievmentByUser,
+    UpdateTeacherGrade
 }

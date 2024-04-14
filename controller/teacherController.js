@@ -33,6 +33,30 @@ const addTeacher = async (req, res)=>{
     }
 }
 
+const AllTeachers = async (req, res) => {
+    try {
+        if(req.user.roleId == 6) {
+            const teachers = await Teachers.findAll({
+                include: [
+                    {
+                        model: Users,
+                        as: 'user',
+                    },
+                    {
+                        model: Grade,
+                        as: 'grades'
+                    }
+
+                ]
+            });
+           return res.send(teachers);
+        }
+        return res.send("u dont have access")
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Internal Server Error");
+    }
+};
 
 const showAll = async (req, res) => {
     const currentUser = req.user.departmentId;
@@ -230,5 +254,6 @@ module.exports={
     UpdateTeacherByUser,
     UpdateTeacherById,
     DeleteById,
-    DelByUser
+    DelByUser,
+    AllTeachers
 }

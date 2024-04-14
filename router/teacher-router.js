@@ -6,6 +6,7 @@ const passport = require('../middleware/passport')
 
 
 router.post("/add", passport.authenticate('jwt', {session: false}),   TeacherController.addTeacher);
+router.get("/showall", passport.authenticate('jwt', {session: false}),   TeacherController.AllTeachers )
 router.get("/all", passport.authenticate('jwt', {session: false}),   TeacherController.showAll )
 router.get("/user/:id", TeacherController.getById )
 router.get("/current/user", passport.authenticate('jwt', {session: false}), TeacherController.getByCurrentUser )

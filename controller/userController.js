@@ -190,7 +190,7 @@ const Role = async (req, res) => {
         const role = {
             roleId: req.body.roleId
         };
-        if(currentUser.roleId == 1){
+        if(currentUser.roleId == 1 || currentUser.roleId == 6){
             const newuser = await Users.update(role, { where: { id: id } });
             return res.send(newuser);
         }
@@ -208,7 +208,7 @@ const Department = async (req, res) => {
         const dep = {
             departmentId: req.body.departmentId
         };
-        if(currentUser.roleId == 1){
+        if(currentUser.roleId == 1 || currentUser.roleId == 6){
             const newuser = await Users.update(dep, { where: { id: id } });
             return res.send(newuser);
         }
@@ -239,7 +239,7 @@ const Delete = async (req, res)=>{
     const user = req.user;
     try{
         const delUser = await Users.findByPk(id)
-        if(user.email == delUser.email || user.role.value == "admin"){
+        if(user.email == delUser.email || user.role.value == "admin" || user.role.value == "main_admin"){
             await Users.destroy({where:{id:id}})
             res.send( "user deleted succesfully")
         }

@@ -93,7 +93,7 @@ const getAll = async (req, res) => {
             });
             res.status(200).send(schedules);
         } else {
-           return res.send("You don't have access");
+           return res.send({});
         }
     }catch(err){
         console.log(err)
