@@ -4,7 +4,9 @@ const Achievment = db.achivments
 const multer = require("multer");
 const Public = db.publications
 const {path} = require("path");
-
+const Department = db.departments
+const Users = db.users
+const { Op } = require('sequelize');
 function checkLinkMatch(baseLink, testLink) {
     if (typeof baseLink === 'string' && typeof testLink === 'string') {
         return testLink.startsWith(baseLink);
@@ -25,11 +27,13 @@ const AddArticles = async (req, res) => {
         if(checkUnique){
             return res.send("this link exists already")
         }
+        let parsed = 0
         let status = 1
         let comment= ""
         if(!checkLinkMatch(public.base_url, link)){
             status -= 1
             comment += "fake link"
+            parsed += 1
         }
         console.log(public.base_url)
         console.log(link)
@@ -42,7 +46,8 @@ const AddArticles = async (req, res) => {
             publicationId,
             points,
             status,
-            comment
+            comment,
+            parsed
         };
 
         const newArticle = await Articles.create(info);
@@ -69,6 +74,48 @@ const storage = multer.diskStorage({
 })
 
 const upload = multer({ storage: storage })
+
+const getAll = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+        const departmentId = req.query.departmentId
+        const publicationId = req.query.publicationId
+        const userWhereClause = userId ? { id: userId } : {};
+        const departmentWhereClause = departmentId ? { id: departmentId } : {};
+        const PublicWhereClause = publicationId ? { id: publicationId } : {};
+
+        const articles = await Articles.findAll({
+            include: [
+                {
+                    model: Public,
+                    as: "publications",
+                    where: PublicWhereClause
+                },
+                {
+                    model: Users,
+                    as: "users",
+                    include: {
+                        model: Department,
+                        as: 'department',
+                        where:departmentWhereClause
+                    },
+                    where: userWhereClause
+                }
+            ],
+            where: {
+                [Op.and]: [
+                    { status: 1 },
+                    { parsed: 1 }
+                ]
+            }
+        });
+
+        return res.send(articles);
+    } catch (e) {
+        console.log(e);
+        return res.status(500).send({ error: 'An error occurred while fetching articles' });
+    }
+};
 
 const getByUser = async (req, res) =>{
     try{
@@ -125,5 +172,6 @@ module.exports={
     upload,
     getByUser,
     changeStatus,
-    DeleteById
+    DeleteById,
+    getAll
 }

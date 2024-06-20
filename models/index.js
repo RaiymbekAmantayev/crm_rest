@@ -49,14 +49,20 @@ db.organization = require("../models/Organizations")(sequelize,DataTypes)
 db.sertificates = require("../models/Sertificates")(sequelize,DataTypes)
 db.project_category = require("../models/CategoryProjects")(sequelize, DataTypes)
 db.projects = require("../models/projects")(sequelize,DataTypes)
-
+db.recomend = require("./Recommend")(sequelize, DataTypes)
+db.issn_level = require("../models/IssnLevel")(sequelize, DataTypes)
 db.sequelize.sync({ force: false })
     .then(() => {
         console.log('yes re-sync done!')
     })
 
 // Установка ассоциаций
+// recomend assoc
+db.users.hasMany(db.recomend, { foreignKey: 'userId', as: 'recomend' });
+db.recomend.belongsTo(db.users, { foreignKey: 'userId', as: 'users' });
 
+db.lessons.hasMany(db.recomend, {foreignKey: 'lessonId', as: 'recomend'});
+db.recomend.belongsTo(db.lessons,{foreignKey:'lessonId', as: 'lessons'});
 //projects association
 db.project_category.hasMany(db.projects, { foreignKey: 'categoryId', as: 'projects' });
 db.projects.belongsTo(db.project_category, { foreignKey: 'categoryId', as: 'project_categories' });

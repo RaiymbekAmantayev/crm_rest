@@ -3,14 +3,14 @@ const multer = require("multer");
 const Project = db.projects
 const Category = db.project_category
 const Achievment = db.achivments
-
+const User = db.users
+const Department = db.departments
 const AddProjects = async (req, res) => {
     try {
         const userId = req.user.id;
         const file = req.file.path
         const category = await Category.findByPk(req.body.categoryId);
         const points = category.points;
-
         const info = {
             title: req.body.title,
             file: file,
@@ -18,7 +18,11 @@ const AddProjects = async (req, res) => {
             categoryId: req.body.categoryId,
             points
         };
-
+        const project = await Project.findAll({where:{userId: userId, file:info.file}})
+        console.log(project)
+        if(project.length>0){
+            return res.send("u cant send same project again")
+        }
         const newProject = await Project.create(info);
         const achievment = await Achievment.findOne({where:{userId: userId}})
         if(achievment){
@@ -32,7 +36,40 @@ const AddProjects = async (req, res) => {
 };
 
 
+const getAll = async (req, res)=>{
+    try{
+        const userId = req.query.userId;
+        const departmentId = req.query.departmentId
+        const categoryId = req.query.categoryId
+        const userWhereClause = userId ? { id: userId } : {};
+        const departmentWhereClause = departmentId ? { id: departmentId } : {};
+        const CategoryWhereClause = categoryId ? { id: categoryId } : {};
 
+        const projects = await Project.findAll({
+            include:[
+                {
+                    model: Category,
+                    as: 'project_categories',
+                    where:CategoryWhereClause
+                },
+                {
+                    model: User,
+                    as: 'users',
+                    include:{
+                        model: Department,
+                        as: 'department',
+                        where:departmentWhereClause
+                    },
+                    where: userWhereClause
+                }
+
+            ]
+        },{where:{status:1}})
+        return res.send(projects)
+    }catch (e){
+        console.log(e)
+    }
+}
 const getAllByUser = async (req, res)=>{
     try{
         const userId = req.query.userId
@@ -104,5 +141,6 @@ module.exports={
     getAllByUser,
     upload,
     DeleteById,
-    changeStatus
+    changeStatus,
+    getAll
 }

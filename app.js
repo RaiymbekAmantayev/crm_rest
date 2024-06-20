@@ -1,13 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-
+const Recomend = require("./controller/Recommend_teacher")
 // middleware
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use("/Images", express.static("./Images"));
+app.use("/Projects", express.static("./Projects"));
+app.use("/Sertificates", express.static("./Sertificates"));
 app.use("/Articles", express.static("./Articles"));
 
 // Определение маршрутов и других настроек приложения...
@@ -52,6 +54,15 @@ app.use("/api/sertific", SertificRouter)
 app.use("/api/pro_cat", ProjectCategory)
 app.use("/api/project", ProjectsRouter)
 
+
+
+const startChecking = () => {
+    console.log('Запуск процесса обработки расчет...');
+    Recomend.checkingRecommend();
+    setTimeout(startChecking, 5000);
+};
+
+startChecking();
 // routers
 app.listen(7000, () => {
     console.log("Сервер запущен на порту 7000");

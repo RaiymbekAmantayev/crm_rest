@@ -23,7 +23,12 @@ const addAchievment = async (req, res) => {
     const count_of_monography = monography.length
     const count_of_seminar = seminar.length;
     const teacher = await Teachers.findOne({where:{userId:userId}})
-    const current_grade = teacher.current_grade
+    var current_grade;
+    if (teacher && teacher.current_grade) {
+        current_grade = teacher.current_grade;
+    } else {
+        current_grade = null;
+    }
     const {academic_degree, experience, pretend_grade} = req.body
     const info={
         academic_degree,
@@ -79,11 +84,18 @@ const colculatingAchievment = async ()=>{
                 [sequelize.fn('SUM', sequelize.col('points')), 'totalPoints']
             ],
             where: {
-                userId: userId,
+                userId: userId,status:1
             }
         });
         const Teacher = await Teachers.findOne({where:{userId:userId}})
-        const survey_percent = Teacher.student_survey * 0.1
+        var survey_percent;
+        if (Teacher && Teacher.student_survey) {
+            survey_percent = Teacher.student_survey * 0.1;
+        } else {
+            survey_percent = 0;
+        }
+
+
         console.log(survey_percent)
         const sertificates = await Sertificates.findAll({ where: { userId: userId, status:1 } });
         const totalPointsOfSertific = await Sertificates.findOne({
@@ -91,7 +103,7 @@ const colculatingAchievment = async ()=>{
                 [sequelize.fn('SUM', sequelize.col('points')), 'totalPoints']
             ],
             where: {
-                userId: userId,
+                userId: userId,status:1
             }
         });
 
@@ -108,7 +120,7 @@ const colculatingAchievment = async ()=>{
                 [sequelize.fn('SUM', sequelize.col('points')), 'totalPoints']
             ],
             where: {
-                userId: userId,
+                userId: userId, status:1
             }
         });
         let hasPhd = 0
@@ -118,7 +130,19 @@ const colculatingAchievment = async ()=>{
             hasPhd += 1
         }
         points += survey_percent
-        points += parseInt(totalPointsOfSertific.dataValues.totalPoints) + parseInt(totalPointsOfProjects.dataValues.totalPoints) + parseInt(totalPointsArticles.dataValues.totalPoints) ;
+        let sertificPoint = 0
+        if(parseInt(totalPointsOfSertific.dataValues.totalPoints)){
+            sertificPoint = parseInt(totalPointsOfSertific.dataValues.totalPoints)
+        }
+        let projectPoint = 0
+        if(parseInt(totalPointsOfProjects.dataValues.totalPoints)){
+            projectPoint = parseInt(totalPointsOfProjects.dataValues.totalPoints)
+        }
+        let articlePoint = 0
+        if( parseInt(totalPointsArticles.dataValues.totalPoints)){
+           articlePoint = parseInt(totalPointsArticles.dataValues.totalPoints)
+        }
+        points += articlePoint + projectPoint + sertificPoint
         let possibleGradeId = null;
         const grades = await Grade.findAll({where:{departmentId: departmentId}})
         for (const grade of grades){

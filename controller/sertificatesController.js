@@ -1,9 +1,11 @@
 const db = require("../models");
 const multer = require("multer");
 const {path} = require("path")
+const Department = db.departments
 const Sertificates = db.sertificates
 const Organization = db.organization
 const Achievement = db.achivments
+const User = db.users
 const AddSertificates = async (req, res) => {
     try {
         // Получаем массив файлов из multer
@@ -36,7 +38,39 @@ const AddSertificates = async (req, res) => {
     }
 };
 
+const getAll = async (req, res)=>{
+    try{
+        const userId = req.query.userId;
+        const departmentId = req.query.departmentId
+        const organizationId = req.query.organizationId
+        const userWhereClause = userId ? { id: userId } : {};
+        const departmentWhereClause = departmentId ? { id: departmentId } : {};
+        const OrganizationWhereClause = organizationId ? { id: organizationId } : {};
+        const sertificates = await Sertificates.findAll({
+            include:[
+                {
+                    model: Organization,
+                    as: 'organization',
+                    where: OrganizationWhereClause
+                },
+                {
+                    model: User,
+                    as: 'users',
+                    include:{
+                        model: Department,
+                        as: 'department',
+                        where:departmentWhereClause
+                    },
+                    where: userWhereClause
+                }
 
+            ]
+        },{where:{status:1}})
+        return res.send(sertificates)
+    }catch (e){
+        console.log(e)
+    }
+}
 
 
 const storage = multer.diskStorage({
@@ -110,5 +144,6 @@ module.exports={
     getAllByUser,
     upload,
     changeStatus,
-    DeleteById
+    DeleteById,
+    getAll
 }
